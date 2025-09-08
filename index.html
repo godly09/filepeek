@@ -3,7 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FilePeek - Visualize CSV, JSON, XML and PDF Files Online</title>
+    <title>FilePeek - Free Online CSV, JSON, XML and PDF Visualization Tools - No Signup Required</title>
+    <meta name="description" content="Free online tools to visualize and inspect CSV, JSON, XML, and PDF files instantly. No signup required. Create charts from CSV data, view JSON/XML trees, and preview PDFs with page navigation.">
+    <meta name="keywords" content="visualize CSV online free, JSON tree viewer no signup, PDF page preview online free, CSV chart generator, XML viewer online, free file visualization tools">
+    <meta name="author" content="FilePeek">
+    <meta property="og:title" content="FilePeek - Free Online File Visualization Tools">
+    <meta property="og:description" content="Visualize and inspect CSV, JSON, XML, and PDF files online - 100% free, no signup required!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://filepeek.com">
+    <meta property="og:image" content="https://filepeek.com/preview-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FilePeek - Free Online File Visualization Tools">
+    <meta name="twitter:description" content="Visualize and inspect CSV, JSON, XML, and PDF files online - 100% free, no signup required!">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "FilePeek",
+      "url": "https://filepeek.com",
+      "description": "Free online tools to visualize and inspect CSV, JSON, XML, and PDF files instantly.",
+      "applicationCategory": "UtilityApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "features": ["CSV visualization", "JSON tree viewer", "PDF preview", "No signup required"],
+      "screenshot": "https://filepeek.com/screenshot.png"
+    }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
@@ -299,6 +327,38 @@
             color: var(--secondary);
         }
         
+        .faq-section {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            margin: 4rem 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .faq-section h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+        }
+        
+        .faq-item {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1.5rem;
+        }
+        
+        .faq-question {
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .faq-answer {
+            color: var(--gray);
+            line-height: 1.6;
+        }
+        
         footer {
             background: var(--dark);
             color: white;
@@ -357,6 +417,10 @@
             
             .feature {
                 padding: 1.5rem;
+            }
+            
+            .faq-section {
+                padding: 2rem 1rem;
             }
         }
     </style>
@@ -478,6 +542,35 @@
                 <i class="fas fa-dollar-sign"></i>
                 <h3>Completely Free</h3>
                 <p>All our tools are free to use with no hidden costs or premium requirements.</p>
+            </div>
+        </div>
+        
+        <div class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">Is FilePeek really free to use?</div>
+                <div class="faq-answer">Yes, FilePeek is completely free to use. There are no hidden fees or premium subscriptions. All our tools are available at no cost.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Are my files uploaded to your servers?</div>
+                <div class="faq-answer">No, all file processing happens directly in your browser. Your files never leave your computer, ensuring complete privacy and security.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">What file formats are supported?</div>
+                <div class="faq-answer">We currently support CSV, JSON, XML, and PDF files. We're continuously working to add support for more file types in the future.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">Do I need to create an account to use FilePeek?</div>
+                <div class="faq-answer">No, FilePeek requires no signup or account creation. You can use all our tools immediately without providing any personal information.</div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">What is the maximum file size I can process?</div>
+                <div class="faq-answer">Since processing happens in your browser, the maximum file size depends on your device's capabilities. Generally, files up to 50MB work well on most modern devices.</div>
             </div>
         </div>
         
