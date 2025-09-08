@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FilePeek - Visualize CSV, JSON, XML and PDF Files Online</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7ff 0%, #e6e9ff 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        header {
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(30deg);
+        }
+        
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            position: relative;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .logo span {
+            color: var(--accent);
+        }
+        
+        .tagline {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto 1rem;
+            font-weight: 300;
+            position: relative;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            position: relative;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            font-size: 0.9rem;
+        }
+        
+        .stat-item i {
+            margin-right: 0.5rem;
+            color: var(--accent);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 4rem;
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+        
+        .tool-card::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+        
+        .tool-header {
+            background: linear-gradient(120deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .tool-content {
+            padding: 2rem;
+        }
+        
+        .tool-description {
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--light-gray);
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.05);
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 0.9rem 2rem;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.25);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.35);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            box-shadow: none;
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .results-area {
+            margin-top: 2rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+        
+        .json-viewer {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1.5rem;
+            border-radius: 10px;
+            max-height: 400px;
+            overflow: auto;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            text-align: left;
+            line-height: 1.4;
+        }
+        
+        .pdf-preview {
+            background: #f0f0f0;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .page-count {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .ad-container {
+            text-align: center;
+            margin: 3rem 0;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.06);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+        
+        .feature {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .feature i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .feature h3 {
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 3rem 1rem;
+            margin-top: 5rem;
+        }
+        
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        .copyright {
+            margin-top: 2rem;
+            color: #999;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo {
+                font-size: 2.2rem;
+            }
+            
+            .tagline {
+                font-size: 1.1rem;
+            }
+            
+            .stats {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .feature {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">File<span>Peek</span></div>
+        <p class="tagline">Visualize and inspect your CSV, JSON, XML, and PDF files online - 100% free, no signup required!</p>
+        
+        <div class="stats">
+            <div class="stat-item"><i class="fas fa-users"></i> 50,000+ Users</div>
+            <div class="stat-item"><i class="fas fa-file-upload"></i> 200,000+ Files Processed</div>
+            <div class="stat-item"><i class="fas fa-thumbs-up"></i> 99% Satisfaction</div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="ad-container">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : '0b5e2c190383a191a6bc986a9f3617e8',
+                    'format' : 'iframe',
+                    'height' : 90,
+                    'width' : 728,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.highperformanceformat.com/0b5e2c190383a191a6bc986a9f3617e8/invoke.js"></script>
+        </div>
+        
+        <div class="tools-grid">
+            <!-- CSV Tool -->
+            <div class="tool-card">
+                <div class="tool-header">CSV Chart Generator</div>
+                <div class="tool-content">
+                    <p class="tool-description">Upload a CSV file to quickly generate interactive charts and visualize your data. Supports bar, line, pie, and scatter plots.</p>
+                    <div class="upload-area" id="csv-upload-area">
+                        <div class="upload-icon"><i class="fas fa-file-csv"></i></div>
+                        <p>Drag & drop your CSV file here or click to browse</p>
+                        <input type="file" id="csv-file" accept=".csv" style="display: none;">
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="btn" id="generate-chart-btn" disabled><i class="fas fa-chart-line"></i> Generate Chart</button>
+                    </div>
+                    
+                    <div class="results-area" id="csv-results">
+                        <h3><i class="fas fa-chart-bar"></i> Your Data Visualization</h3>
+                        <select id="chart-type" class="btn-outline" style="margin: 1rem 0; padding: 0.5rem 1rem;">
+                            <option value="line">Line Chart</option>
+                            <option value="bar">Bar Chart</option>
+                            <option value="pie">Pie Chart</option>
+                            <option value="doughnut">Doughnut Chart</option>
+                        </select>
+                        <div class="chart-container">
+                            <canvas id="data-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- JSON Tool -->
+            <div class="tool-card">
+                <div class="tool-header">JSON/XML Tree Viewer</div>
+                <div class="tool-content">
+                    <p class="tool-description">Upload a JSON or XML file to view its structure in an interactive tree format. Easily navigate complex data structures.</p>
+                    <div class="upload-area" id="json-upload-area">
+                        <div class="upload-icon"><i class="fas fa-file-code"></i></div>
+                        <p>Drag & drop your JSON/XML file here or click to browse</p>
+                        <input type="file" id="json-file" accept=".json,.xml" style="display: none;">
+                    </div>
+                    
+                    <div class="results-area" id="json-results">
+                        <h3><i class="fas fa-project-diagram"></i> JSON Structure</h3>
+                        <div class="json-viewer" id="json-output"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- PDF Tool -->
+            <div class="tool-card">
+                <div class="tool-header">PDF Preview Tool</div>
+                <div class="tool-content">
+                    <p class="tool-description">Upload a PDF to see page count and preview the document. Navigate through pages and check important details.</p>
+                    <div class="upload-area" id="pdf-upload-area">
+                        <div class="upload-icon"><i class="fas fa-file-pdf"></i></div>
+                        <p>Drag & drop your PDF file here or click to browse</p>
+                        <input type="file" id="pdf-file" accept=".pdf" style="display: none;">
+                    </div>
+                    
+                    <div class="results-area" id="pdf-results">
+                        <div class="page-count">
+                            <i class="fas fa-copy"></i>
+                            <span id="page-count">Total Pages: 0</span>
+                        </div>
+                        <div class="pdf-preview">
+                            <div style="margin-bottom: 1rem;">
+                                <button class="btn-outline" id="prev-page"><i class="fas fa-chevron-left"></i> Previous</button>
+                                <button class="btn-outline" id="next-page">Next <i class="fas fa-chevron-right"></i></button>
+                            </div>
+                            <canvas id="pdf-preview"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-lock"></i>
+                <h3>100% Secure</h3>
+                <p>Your files are processed entirely in your browser and never uploaded to our servers.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-bolt"></i>
+                <h3>Lightning Fast</h3>
+                <p>Process and visualize your files in seconds with our optimized tools.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-dollar-sign"></i>
+                <h3>Completely Free</h3>
+                <p>All our tools are free to use with no hidden costs or premium requirements.</p>
+            </div>
+        </div>
+        
+        <div class="ad-container">
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : 'a244e02e652aec975453a276b759b69f',
+                    'format' : 'iframe',
+                    'height' : 60,
+                    'width' : 468,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.highperformanceformat.com/a244e02e652aec975453a276b759b69f/invoke.js"></script>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="footer-content">
+            <h3>FilePeek - File Visualization Tools</h3>
+            <p>Instant file visualization for developers, data analysts, and professionals</p>
+            
+            <div class="footer-links">
+                <a href="#"><i class="fas fa-home"></i> Home</a>
+                <a href="#"><i class="fas fa-tools"></i> Tools</a>
+                <a href="#"><i class="fas fa-lock"></i> Privacy Policy</a>
+                <a href="#"><i class="fas fa-file-alt"></i> Terms of Service</a>
+                <a href="#"><i class="fas fa-envelope"></i> Contact Us</a>
+                <a href="#"><i class="fas fa-info-circle"></i> About</a>
+            </div>
+            
+            <div class="copyright">
+                &copy; 2023 FilePeek. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set up PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.worker.min.js';
+        
+        // Variables for PDF handling
+        let currentPdf = null;
+        let currentPage = 1;
+        let currentPdfDocument = null;
+        
+        // CSV Chart Generator
+        document.getElementById('csv-upload-area').addEventListener('click', function() {
+            document.getElementById('csv-file').click();
+        });
+        
+        document.getElementById('csv-file').addEventListener('change', function(e) {
+            if (e.target.files.length) {
+                document.getElementById('generate-chart-btn').disabled = false;
+                document.getElementById('csv-upload-area').innerHTML = 
+                    `<div class="upload-icon"><i class="fas fa-check-circle"></i></div><p>${e.target.files[0].name} selected</p>`;
+            }
+        });
+        
+        document.getElementById('generate-chart-btn').addEventListener('click', function() {
+            const file = document.getElementById('csv-file').files[0];
+            if (file) {
+                Papa.parse(file, {
+                    header: true,
+                    complete: function(results) {
+                        const data = results.data;
+                        const headers = results.meta.fields;
+                        
+                        if (headers && headers.length >= 2) {
+                            const labels = data.map(row => row[headers[0]]);
+                            const dataset = data.map(row => row[headers[1]]);
+                            
+                            renderChart(labels, dataset, headers);
+                            
+                            document.getElementById('csv-results').style.display = 'block';
+                        }
+                    }
+                });
+            }
+        });
+        
+        document.getElementById('chart-type').addEventListener('change', function() {
+            const file = document.getElementById('csv-file').files[0];
+            if (file) {
+                Papa.parse(file, {
+                    header: true,
+                    complete: function(results) {
+                        const data = results.data;
+                        const headers = results.meta.fields;
+                        
+                        if (headers && headers.length >= 2) {
+                            const labels = data.map(row => row[headers[0]]);
+                            const dataset = data.map(row => row[headers[1]]);
+                            
+                            renderChart(labels, dataset, headers);
+                        }
+                    }
+                });
+            }
+        });
+        
+        function renderChart(labels, dataset, headers) {
+            const ctx = document.getElementById('data-chart').getContext('2d');
+            const chartType = document.getElementById('chart-type').value;
+            
+            if (window.dataChartInstance) {
+                window.dataChartInstance.destroy();
+            }
+            
+            window.dataChartInstance = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: headers[1],
+                        data: dataset,
+                        backgroundColor: chartType === 'line' || chartType === 'bar' ? 
+                            'rgba(67, 97, 238, 0.5)' : [
+                            'rgba(67, 97, 238, 0.8)',
+                            'rgba(58, 12, 163, 0.8)',
+                            'rgba(247, 37, 133, 0.8)',
+                            'rgba(76, 201, 240, 0.8)',
+                            'rgba(253, 181, 21, 0.8)'
+                        ],
+                        borderColor: 'rgba(67, 97, 238, 1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        fill: chartType === 'line' ? false : true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${headers[0]} vs ${headers[1]}`,
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        }
+        
+        // JSON Tree Viewer
+        document.getElementById('json-upload-area').addEventListener('click', function() {
+            document.getElementById('json-file').click();
+        });
+        
+        document.getElementById('json-file').addEventListener('change', function(e) {
+            if (e.target.files.length) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        document.getElementById('json-output').textContent = 
+                            JSON.stringify(jsonData, null, 2);
+                        document.getElementById('json-results').style.display = 'block';
+                        
+                        document.getElementById('json-upload-area').innerHTML = 
+                            `<div class="upload-icon"><i class="fas fa-check-circle"></i></div><p>${file.name} selected</p>`;
+                    } catch (error) {
+                        alert('Invalid JSON file. Please check the format.');
+                    }
+                };
+                
+                reader.readAsText(file);
+            }
+        });
+        
+        // PDF Preview Tool
+        document.getElementById('pdf-upload-area').addEventListener('click', function() {
+            document.getElementById('pdf-file').click();
+        });
+        
+        document.getElementById('pdf-file').addEventListener('change', function(e) {
+            if (e.target.files.length) {
+                const file = e.target.files[0];
+                const fileReader = new FileReader();
+                
+                fileReader.onload = function() {
+                    const typedarray = new Uint8Array(this.result);
+                    
+                    pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                        currentPdfDocument = pdf;
+                        document.getElementById('page-count').textContent = `Total Pages: ${pdf.numPages}`;
+                        
+                        // Render the first page
+                        currentPage = 1;
+                        renderPdfPage(pdf, currentPage);
+                        document.getElementById('pdf-results').style.display = 'block';
+                    });
+                };
+                
+                fileReader.readAsArrayBuffer(file);
+                
+                document.getElementById('pdf-upload-area').innerHTML = 
+                    `<div class="upload-icon"><i class="fas fa-check-circle"></i></div><p>${file.name} selected</p>`;
+            }
+        });
+        
+        document.getElementById('next-page').addEventListener('click', function() {
+            if (currentPdfDocument && currentPage < currentPdfDocument.numPages) {
+                currentPage++;
+                renderPdfPage(currentPdfDocument, currentPage);
+            }
+        });
+        
+        document.getElementById('prev-page').addEventListener('click', function() {
+            if (currentPdfDocument && currentPage > 1) {
+                currentPage--;
+                renderPdfPage(currentPdfDocument, currentPage);
+            }
+        });
+        
+        function renderPdfPage(pdf, pageNumber) {
+            pdf.getPage(pageNumber).then(function(page) {
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.getElementById('pdf-preview');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                page.render(renderContext);
+                document.getElementById('page-count').textContent = `Page ${pageNumber} of ${pdf.numPages}`;
+            });
+        }
+        
+        // Drag and drop functionality for all upload areas
+        const uploadAreas = document.querySelectorAll('.upload-area');
+        
+        uploadAreas.forEach(area => {
+            area.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            area.addEventListener('dragleave', function() {
+                this.classList.remove('dragover');
+            });
+            
+            area.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                const fileInput = this.parentElement.querySelector('input[type="file"]');
+                if (fileInput && e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
